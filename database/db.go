@@ -23,7 +23,8 @@ type DataBase struct {
 	Client *mongo.Client
 }
 
-var dbName string = "wallpapers"
+// var dbName string = "wallpapers"
+var dbName string = "wallpaper_production"
 
 func (d *DataBase) InitDataBase() *mongo.Client {
 	err := godotenv.Load(".env")
