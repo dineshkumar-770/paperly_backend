@@ -54,7 +54,7 @@ func (d *DataBase) InsertWallpaperIntoDB(wallpaper models.Wallpaper, category st
 	if d.Client == nil {
 		return nil, fmt.Errorf("database client is not initialized")
 	}
-	collection := d.Client.Database("wallpapers").Collection(category)
+	collection := d.Client.Database(dbName).Collection(category)
 	result, err := collection.InsertOne(context.TODO(), wallpaper)
 	return result, err
 }
@@ -151,7 +151,7 @@ func (d *DataBase) AddCategories(category models.WallPaperCategories) (bool, err
 	if d.Client == nil {
 		return false, fmt.Errorf("database client is not initialized")
 	}
-	collection := d.Client.Database("wallpapers").Collection("wallpapers_categories")
+	collection := d.Client.Database(dbName).Collection("wallpapers_categories")
 	_, err := collection.InsertOne(context.TODO(), category)
 
 	if err != nil {
@@ -167,7 +167,7 @@ func (d *DataBase) SaveDeviceInfo(deviceInfo models.DeviceInfo) (bool, error) {
 		return false, fmt.Errorf("database client is not initialized")
 	}
 
-	collection := d.Client.Database("wallpapers").Collection("device_information")
+	collection := d.Client.Database(dbName).Collection("device_information")
 	_, err := collection.InsertOne(context.TODO(), deviceInfo)
 	if err != nil {
 		return false, err
@@ -181,7 +181,7 @@ func (d *DataBase) FindOneCategory(categoryName string) (bool, error) {
 		return true, fmt.Errorf("database client is not initialized")
 	}
 	var categoryData models.WallPaperCategories
-	collection := d.Client.Database("wallpapers").Collection("wallpapers_categories")
+	collection := d.Client.Database(dbName).Collection("wallpapers_categories")
 	filter := bson.M{"category_name": categoryName}
 	err := collection.FindOne(context.TODO(), filter).Decode(&categoryData)
 	if err == mongo.ErrNoDocuments {
