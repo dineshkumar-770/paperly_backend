@@ -28,5 +28,5 @@ func main() {
 	r.HandleFunc("/get_all_images", controller.RetrieveAllImageFromBucket).Methods("GET")
 	r.HandleFunc("/get_all_categories", wallpaperCategoriesCont.GetAllCategories).Methods("GET")
 	r.HandleFunc("/save_fcm_token", deviceInfoAndFCMController.SaveUSerDeviceInfoWithFCM).Methods("POST")
-	log.Fatal(http.ListenAndServe(":8088", r))
+	log.Fatal(http.ListenAndServe(":4400", r))
 }
