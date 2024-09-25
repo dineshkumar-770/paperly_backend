@@ -30,7 +30,8 @@ func (d *DataBase) InitDataBase() *mongo.Client {
 	if err != nil {
 		return nil
 	}
-	dburl := os.Getenv("DATABASEURL")
+	// dburl := os.Getenv("DATABASEURL")
+	dburl := os.Getenv("PRODUCTIONDB")
 	fmt.Println(dburl)
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(dburl).SetServerAPIOptions(serverAPI)
