@@ -23,6 +23,7 @@ type DataBase struct {
 	Client *mongo.Client
 }
 
+// TODO: Uncomment this before pushing the code to
 // var dbName string = "wallpapers"
 var dbName string = "wallpaper_production"
 
@@ -61,7 +62,10 @@ func (d *DataBase) InsertWallpaperIntoDB(wallpaper models.Wallpaper, category st
 
 func (d *DataBase) GetWallpaperByCategory(category string) ([]models.Wallpaper, error) {
 	_ = godotenv.Load(".env")
-	// awsRegion := os.Getenv("AWSREGION")
+
+	s3BucketFolderPath := os.Getenv("PRODUCTIONBUCKETFOLDER")
+
+	keyProd := s3BucketFolderPath + "/%s"
 	awsBucket := os.Getenv("BUCKETNAME")
 	if d.Client == nil {
 		return nil, fmt.Errorf("database client is not initialized")
@@ -80,7 +84,8 @@ func (d *DataBase) GetWallpaperByCategory(category string) ([]models.Wallpaper, 
 	for cursor.Next(context.TODO()) {
 		var wallpaper models.Wallpaper
 		cursor.Decode(&wallpaper)
-		key := fmt.Sprintf("wallpapers/%s", wallpaper.Filename)
+		key := fmt.Sprintf(keyProd, wallpaper.Filename)
+		// key := fmt.Sprintf("wallpapers/%s", wallpaper.Filename)
 		svc := helpers.GetAllFilesFromBucket()
 		req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 			Bucket: aws.String(awsBucket),
@@ -105,6 +110,9 @@ func (d *DataBase) GetWallpaperByCategory(category string) ([]models.Wallpaper, 
 
 func (d *DataBase) GetAllCategoriesList() ([]models.WallPaperCategories, error) {
 	_ = godotenv.Load(".env")
+	s3BucketFolderPath := os.Getenv("PRODUCTIONBUCKETFOLDER")
+
+	keyProd := s3BucketFolderPath + "/%s"
 	awsBucket := os.Getenv("BUCKETNAME")
 	if d.Client == nil {
 		return nil, fmt.Errorf("database client is not initialized")
@@ -124,7 +132,8 @@ func (d *DataBase) GetAllCategoriesList() ([]models.WallPaperCategories, error) 
 	for cursor.Next(context.TODO()) {
 		var category models.WallPaperCategories
 		cursor.Decode(&category)
-		key := fmt.Sprintf("wallpapers/%s", category.CategoryImage)
+		key := fmt.Sprintf(keyProd, category.CategoryImage)
+		// key := fmt.Sprintf("wallpapers/%s", category.CategoryImage)
 		svc := helpers.GetAllFilesFromBucket()
 		req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 			Bucket: aws.String(awsBucket),

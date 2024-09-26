@@ -9,8 +9,11 @@ import (
 	"mongo_api/response"
 	"mongo_api/utils"
 	"net/http"
+	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type WallCategories struct {
@@ -30,7 +33,15 @@ func (wal *WallCategories) AddWallpaperCategories(w http.ResponseWriter, r *http
 	w.Header().Set("Content-Type", "multipart/form-data")
 	wallCategoryName := r.FormValue("category")
 	myDatabase.InitDataBase()
-
+	errS3 := godotenv.Load(".env")
+	if errS3 != nil {
+		resp.Status = "Failed"
+		resp.Message = errS3.Error() + ", No environment found"
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(resp)
+		return
+	}
+	s3BucketFolderPath := os.Getenv("PRODUCTIONBUCKETFOLDER")
 	if wallCategoryName == "" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		resp.Status = "failed"
@@ -72,7 +83,7 @@ func (wal *WallCategories) AddWallpaperCategories(w http.ResponseWriter, r *http
 	getPreexistCategory, err := myDatabase.FindOneCategory(wallCategory.CategoryName)
 
 	if !getPreexistCategory {
-		status, errr := categoryAwsInstance.PutImageObjectToS3(file, handler, "wallpapers")
+		status, errr := categoryAwsInstance.PutImageObjectToS3(file, handler, s3BucketFolderPath)
 		if !status {
 			resp.Status = "Failed"
 			resp.Message = errr.Error() + ", Unable to Save the file in Cloud"

@@ -9,8 +9,11 @@ import (
 	"mongo_api/response"
 	"mongo_api/utils"
 	"net/http"
+	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 var myAwsInstance = awshelper.AwsInstance{}
@@ -26,6 +29,15 @@ func (wc *WallpaperController) SaveWallpapers(w http.ResponseWriter, r *http.Req
 		Status:  "Success",
 		Message: "Uploaded Successfully",
 	}
+	errS3 := godotenv.Load(".env")
+	if errS3 != nil {
+		resp.Status = "Failed"
+		resp.Message = errS3.Error() + ", No environment found"
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(resp)
+		return
+	}
+	s3BucketFolderPath := os.Getenv("PRODUCTIONBUCKETFOLDER")
 	category := r.FormValue("category")
 	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
@@ -54,7 +66,7 @@ func (wc *WallpaperController) SaveWallpapers(w http.ResponseWriter, r *http.Req
 	handler.Filename = newFileName
 
 	//Put the file to AWS S3 instance----
-	status, err := myAwsInstance.PutImageObjectToS3(file, handler, "wallpapers")
+	status, err := myAwsInstance.PutImageObjectToS3(file, handler, s3BucketFolderPath)
 
 	if !status {
 		resp.Status = "Failed"
