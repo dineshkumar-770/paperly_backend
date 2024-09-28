@@ -5,7 +5,7 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
-	"os"
+	"mongo_api/utils"
 	"path"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,8 +20,12 @@ func AddImageToS3(file multipart.File, fileHeader *multipart.FileHeader, filePat
 		log.Fatal("Error in loading Environments", err)
 		return false, err
 	}
-	awsRegion := os.Getenv("AWSREGION")
-	awsBucket := os.Getenv("BUCKETNAME")
+	envVars, errEnv := utils.GetEnvVariables()
+	if envVars.BucketName == "" {
+		return false, errEnv
+	}
+	awsRegion := envVars.AWSRegion
+	awsBucket := envVars.BucketName
 	s3FolderPath := filePathS3 + "/"
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(awsRegion),
@@ -73,7 +77,11 @@ func AddImageToS3(file multipart.File, fileHeader *multipart.FileHeader, filePat
 
 func GetAllFilesFromBucket() *s3.S3 {
 	_ = godotenv.Load(".env")
-	awsRegion := os.Getenv("AWSREGION")
+	envVars, _ := utils.GetEnvVariables()
+	if envVars.BucketName == "" {
+		return nil
+	}
+	awsRegion := envVars.AWSRegion
 	// awsBucket := os.Getenv("BUCKETNAME")
 
 	sess, err := session.NewSession(&aws.Config{

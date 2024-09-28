@@ -7,15 +7,14 @@ import (
 	"mongo_api/helpers"
 	"mongo_api/models"
 	"mongo_api/response"
+	"mongo_api/utils"
 	"net/http"
-	"os"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/joho/godotenv"
 )
 
 // RetrieveS3FileInstance
@@ -27,14 +26,20 @@ func RetrieveAllImageFromBucket(w http.ResponseWriter, r *http.Request) {
 		Status: "Failed",
 	}
 	var allWallpapers []models.Wallpaper
-
-	_ = godotenv.Load(".env")
-	awsBucket := os.Getenv("BUCKETNAME")
-	folderS3 := os.Getenv("PRODUCTIONBUCKETFOLDER")
+	envVars, errEnv := utils.GetEnvVariables()
+	if envVars.BucketName == "" {
+		resp.Status = "Failed"
+		resp.Message = errEnv.Error() + ", No environment found"
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(resp)
+		return
+	}
+	awsBucket := envVars.BucketName
+	folderS3 := envVars.BucketFolderName
 	svc := helpers.GetAllFilesFromBucket()
 	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(awsBucket),
-		Prefix: aws.String(folderS3 + "/"),
+		Prefix: aws.String(folderS3),
 	}
 	result, err := svc.ListObjectsV2(input)
 	if err != nil {
