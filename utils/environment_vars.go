@@ -25,13 +25,13 @@ func GetEnvVariables() (EnvVariables, error) {
 		return e, err
 	}
 
-	databaseURL := os.Getenv("PRODUCTIONDB")
+	databaseURL := os.Getenv("DATABASEURL")
 	awsRegion := os.Getenv("AWSREGION")
 	bucketName := os.Getenv("BUCKETNAME")
 	awsSecretKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	awsAccessKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
-	databaseName := os.Getenv("PRODDBNAME")
-	bucketFolderName := os.Getenv("PRODUCTIONBUCKETFOLDER")
+	databaseName := os.Getenv("DEVDBNAME")
+	bucketFolderName := os.Getenv("DEVBUCKETFOLDER")
 
 	e.AWSAccessKey = awsAccessKey
 	e.AWSRegion = awsRegion

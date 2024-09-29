@@ -99,7 +99,7 @@ func (d *DataBase) GetWallpaperByCategory(category string) ([]models.Wallpaper, 
 			Key:    aws.String(key),
 		})
 
-		urlStr, err := req.Presign(1 * time.Hour)
+		urlStr, err := req.Presign(24 * time.Hour)
 		if err != nil {
 			log.Printf("Error generating presigned URL for %s: %v", wallpaper.Filename, err)
 			continue
@@ -150,7 +150,7 @@ func (d *DataBase) GetAllCategoriesList() ([]models.WallPaperCategories, error) 
 			Key:    aws.String(key),
 		})
 
-		urlStr, err := req.Presign(1 * time.Hour)
+		urlStr, err := req.Presign( 24 * time.Hour)
 		if err != nil {
 			log.Printf("Error generating presigned URL for %s: %v", category.CategoryImage, err)
 			continue

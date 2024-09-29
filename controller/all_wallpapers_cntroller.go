@@ -65,7 +65,7 @@ func RetrieveAllImageFromBucket(w http.ResponseWriter, r *http.Request) {
 					Key:    aws.String(*item.Key),
 				})
 
-				urlStr, err := req.Presign(1 * time.Hour)
+				urlStr, err := req.Presign(24 * time.Hour)
 				if err != nil {
 					log.Println("error generating presigned URL for: --- ", err)
 					resp.Message = "Error in fetching Images from cloud"
