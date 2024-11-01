@@ -17,6 +17,7 @@ var awsInstance = awshelper.AwsInstance{}
 var wallpaperController = controller.WallpaperController{}
 var wallpaperCategoriesCont = controller.WallCategories{}
 var deviceInfoAndFCMController = controller.DeviceInfoAndFCM{}
+var notiController = controller.NotificationController{}
 
 func main() {
 	awsInstance.AwsInit()
@@ -28,5 +29,7 @@ func main() {
 	r.HandleFunc("/get_all_images", controller.RetrieveAllImageFromBucket).Methods("GET")
 	r.HandleFunc("/get_all_categories", wallpaperCategoriesCont.GetAllCategories).Methods("GET")
 	r.HandleFunc("/save_fcm_token", deviceInfoAndFCMController.SaveUSerDeviceInfoWithFCM).Methods("POST")
+	r.HandleFunc("/send_simple_notification",notiController.SendSimpleNotification).Methods("POST")
+	r.HandleFunc("/delete_category_image",controller.DeleteCategoryImage).Methods("POST")
 	log.Fatal(http.ListenAndServe(":4400", r))
 }

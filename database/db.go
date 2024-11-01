@@ -31,7 +31,7 @@ func (d *DataBase) InitDataBase() *mongo.Client {
 	envVars, _ := utils.GetEnvVariables()
 	if envVars.BucketName == "" {
 		return nil
-	} 
+	}
 	dburl := envVars.DatabaseURL
 	fmt.Println(dburl)
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
@@ -150,7 +150,7 @@ func (d *DataBase) GetAllCategoriesList() ([]models.WallPaperCategories, error) 
 			Key:    aws.String(key),
 		})
 
-		urlStr, err := req.Presign( 24 * time.Hour)
+		urlStr, err := req.Presign(24 * time.Hour)
 		if err != nil {
 			log.Printf("Error generating presigned URL for %s: %v", category.CategoryImage, err)
 			continue
@@ -221,5 +221,29 @@ func (d *DataBase) FindOneCategory(categoryName string) (bool, error) {
 	log.Println(err)
 
 	return true, err
+}
 
+func (d *DataBase) DeleteOneImage(wallpaper models.Wallpaper) (bool, error) {
+	if d.Client != nil {
+		return false, fmt.Errorf("database client is not initialized")
+	}
+
+	envVars, errEnv := utils.GetEnvVariables()
+	if envVars.BucketName == "" {
+		return false, errEnv
+	}
+
+	collectionName := wallpaper.Category
+	wallpaperId := wallpaper.WallpaperID
+	log.Println("Collection Name:", collectionName)
+    log.Println("Wallpaper ID:", wallpaperId)
+
+	collection := d.Client.Database(envVars.DatabaseName).Collection(collectionName)
+	filter := bson.M{"wallpaper_id": wallpaperId}
+	err2 := collection.FindOneAndDelete(context.Background(), filter)
+	if err2.Err() != nil {
+		return false, err2.Err()
+	}
+
+	return true, nil
 }

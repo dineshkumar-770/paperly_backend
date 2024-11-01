@@ -44,8 +44,40 @@ func (a *AwsInstance) AwsInit() (*session.Session, error) {
 	return aws_sesson, a.MyError
 }
 
+func (a *AwsInstance) DeleteFileFromS3(fileKey string) (bool, error) {
+	envVars, err := utils.GetEnvVariables()
+
+	if err != nil || envVars.BucketName == "" {
+		return false, err
+	}
+
+	awsRegion := envVars.AWSRegion
+
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(awsRegion),
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	svc := s3.New(sess)
+
+	input := &s3.DeleteObjectInput{
+		Bucket: aws.String(envVars.BucketName),
+		Key:    aws.String(fileKey),
+	}
+
+	_, err2 := svc.DeleteObject(input)
+
+	if err2 != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (a *AwsInstance) PutImageObjectToS3(file multipart.File, fileHeader *multipart.FileHeader, filePathS3 string) (bool, error) {
-	 
+
 	envVars, err := utils.GetEnvVariables()
 	if envVars.BucketName == "" {
 		return false, err
