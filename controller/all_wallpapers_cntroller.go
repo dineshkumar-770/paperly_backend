@@ -30,9 +30,9 @@ func DeleteCategoryImage(w http.ResponseWriter, r *http.Request) {
 		Status: "Failed",
 	}
 
-	var wallpaperObject models.Wallpaper
-	err := json.NewDecoder(r.Body).Decode(&wallpaperObject)
-	if err != nil {
+	// var wallpaperObject models.Wallpaper
+	wallpaperKey := r.FormValue("key")
+	if wallpaperKey == "" {
 		w.WriteHeader(401)
 		resp.Message = "Unable to parse the wallpaper object. kindly provider valid wallpaper to delete!"
 		resp.Data = nil
@@ -40,25 +40,10 @@ func DeleteCategoryImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("decoded wall object: ", wallpaperObject)
+	log.Println("decoded wall object: ", wallpaperKey)
 
-	_, err1 := awsInstnce.DeleteFileFromS3(wallpaperObject.Filename)
-	if err1 != nil {
-		w.WriteHeader(500)
-		resp.Message = "Internal Server Error from Cloud Storage. Please try again later!"
-		resp.Data = nil
-		json.NewEncoder(w).Encode(resp)
-		return
-	} else {
-		status, _ := dbInstnce.DeleteOneImage(wallpaperObject)
-		if !status {
-			w.WriteHeader(500)
-			resp.Message = "Internal Server Error from Data storage. Please try again later!"
-			resp.Data = nil
-			json.NewEncoder(w).Encode(resp)
-			return
-		}
-
+	status , err2 := dbInstnce.DeleteOneImage(wallpaperKey)
+	if status {
 		w.WriteHeader(200)
 		resp.Status = "Success"
 		resp.Message = "Image deleted successfully!"
@@ -66,8 +51,35 @@ func DeleteCategoryImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
+	w.WriteHeader(500)
+	resp.Status = "Failed"
+	resp.Message = "Error in deleting images wallpaper"
+	resp.Data = err2
+	json.NewEncoder(w).Encode(resp)
 
+	// _, err1 := awsInstnce.DeleteFileFromS3(wallpaperKey)
+	// if err1 != nil {
+	// 	w.WriteHeader(500)
+	// 	resp.Message = "Internal Server Error from Cloud Storage. Please try again later!"
+	// 	resp.Data = nil
+	// 	json.NewEncoder(w).Encode(resp)
+	// 	return
+	// } else {
+	// 	status, erro3 := dbInstnce.DeleteOneImage(wallpaperKey)
+	// 	if !status {
+	// 		w.WriteHeader(500)
+	// 		resp.Message = "Internal Server Error from Data storage. Please try again later!"
+	// 		resp.Data = erro3
+	// 		json.NewEncoder(w).Encode(resp)
+	// 		return
+	// 	}
+
+		// w.WriteHeader(200)
+		// resp.Status = "Success"
+		// resp.Message = "Image deleted successfully!"
+		// json.NewEncoder(w).Encode(resp)
+		// return
+	// }
 }
 
 // RetrieveS3FileInstance

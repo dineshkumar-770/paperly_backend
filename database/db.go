@@ -21,10 +21,7 @@ import (
 type DataBase struct {
 	Client *mongo.Client
 }
-
-// TODO: Uncomment this before pushing the code to
-// var dbName string = "wallpapers"
-// var dbName string = "wallpaper_production"
+ 
 
 func (d *DataBase) InitDataBase() *mongo.Client {
 
@@ -114,6 +111,7 @@ func (d *DataBase) GetWallpaperByCategory(category string) ([]models.Wallpaper, 
 
 	return wallpapers, nil
 }
+ 
 
 func (d *DataBase) GetAllCategoriesList() ([]models.WallPaperCategories, error) {
 	envVars, err := utils.GetEnvVariables()
@@ -143,7 +141,6 @@ func (d *DataBase) GetAllCategoriesList() ([]models.WallPaperCategories, error) 
 		var category models.WallPaperCategories
 		cursor.Decode(&category)
 		key := fmt.Sprintf(keyProd, category.CategoryImage)
-		// key := fmt.Sprintf("wallpapers/%s", category.CategoryImage)
 		svc := helpers.GetAllFilesFromBucket()
 		req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 			Bucket: aws.String(awsBucket),
@@ -157,6 +154,12 @@ func (d *DataBase) GetAllCategoriesList() ([]models.WallPaperCategories, error) 
 		}
 
 		category.CategoryImage = urlStr
+		collec2 := d.Client.Database(envVars.DatabaseName).Collection(category.CategoryName)
+		count, err2 := collec2.EstimatedDocumentCount(context.TODO())
+		if err2 != nil {
+			category.TotalImages = 0
+		}
+		category.TotalImages = int(count)
 		allCategories = append(allCategories, category)
 	}
 	if err := cursor.Err(); err != nil {
@@ -223,7 +226,7 @@ func (d *DataBase) FindOneCategory(categoryName string) (bool, error) {
 	return true, err
 }
 
-func (d *DataBase) DeleteOneImage(wallpaper models.Wallpaper) (bool, error) {
+func (d *DataBase) DeleteOneImage(fileNameKey string) (bool, error) {
 	if d.Client != nil {
 		return false, fmt.Errorf("database client is not initialized")
 	}
@@ -233,17 +236,16 @@ func (d *DataBase) DeleteOneImage(wallpaper models.Wallpaper) (bool, error) {
 		return false, errEnv
 	}
 
-	collectionName := wallpaper.Category
-	wallpaperId := wallpaper.WallpaperID
-	log.Println("Collection Name:", collectionName)
-    log.Println("Wallpaper ID:", wallpaperId)
+	collection := d.Client.Database(envVars.DatabaseName).Collection("marvals")
+	filter := bson.M{"filename": fileNameKey}
 
-	collection := d.Client.Database(envVars.DatabaseName).Collection(collectionName)
-	filter := bson.M{"wallpaper_id": wallpaperId}
-	err2 := collection.FindOneAndDelete(context.Background(), filter)
-	if err2.Err() != nil {
-		return false, err2.Err()
+	result, err2 := collection.DeleteOne(context.TODO(), filter)
+	if err2 != nil {
+		log.Println("Error deleting document:", err2)
+		return false, err2
 	}
+
+	log.Println("deleting document successfully:", result)
 
 	return true, nil
 }
